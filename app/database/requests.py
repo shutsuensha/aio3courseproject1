@@ -5,7 +5,6 @@ from sqlalchemy import select
 async def set_user(tg_id):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
-        
         if not user:
             session.add(User(tg_id=tg_id))
             await session.commit()
@@ -23,13 +22,36 @@ async def get_items(category_id):
 
 async def get_item(item_id):
     async with async_session() as session:
-        return await session.scalar(select(Item).where(Item.id == item_id))
+        item = await session.scalar(select(Item).where(Item.id == item_id))
+        return item
 
 
 async def set_item_basket(tg_id, item_id):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
         session.add(Basket(user=user.id, item=item_id))
+        await session.commit()
+
+
+async def get_item_basket(tg_id, item_id):
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        basket = await session.scalar(select(Basket).where(Basket.user == user.id, Basket.item == item_id))
+        return basket
+    
+
+async def get_items_basket(tg_id, item_id):
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        basket = await session.scalars(select(Basket).where(Basket.user == user.id, Basket.item == item_id))
+        return basket
+    
+
+async def delete_item_basket(tg_id, item_id):
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        basket = await session.scalar(select(Basket).where(Basket.user == user.id, Basket.item == item_id))
+        await session.delete(basket)
         await session.commit()
 
 
